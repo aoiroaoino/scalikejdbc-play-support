@@ -16,7 +16,7 @@
 package scalikejdbc
 
 import play.api._
-import scalikejdbc.config.{ TypesafeConfig, TypesafeConfigReader, DBs }
+import scalikejdbc.config.{ TypesafeConfig, TypesafeConfigReader, DBs, DBsWithEnv }
 
 /**
  * The Play plugin to use ScalikeJDBC
@@ -39,7 +39,11 @@ class PlayPlugin(implicit app: Application) extends Plugin {
   }
 
   override def onStart(): Unit = {
-    DBs.setupAll()
+    Option(System.getenv("PLAY_DB_ENV")) match {
+      case Some("") | None => DBs.setupAll()
+      case Some(env) => DBsWithEnv(env).setupAll()
+    }
+
     opt("closeAllOnStop", "enabled")(playConfig).foreach { enabled => closeAllOnStop = enabled.toBoolean }
   }
 
